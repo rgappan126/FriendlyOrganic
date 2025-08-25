@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Organic Grocery Orders</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0ea5e9">
+  <link rel="icon" href="icons/icon-192.png">
+  <style>
+    :root { --bg:#0b1220; --card:#111827; --muted:#6b7280; --text:#e5e7eb; --accent:#0ea5e9; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; }
+    *{box-sizing:border-box}
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; background:linear-gradient(180deg,#0b1220,#0b1220 60%,#0a1020); color:var(--text); }
+    header { position: sticky; top:0; z-index:10; background:#0b1220cc; backdrop-filter: blur(6px); border-bottom:1px solid #1f2937; }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 20px; margin: 0; }
+    .grid { display:grid; gap:16px; grid-template-columns: 1fr; }
+    @media(min-width: 960px){ .grid{ grid-template-columns: 1.1fr 0.9fr; } }
+    .card { background: var(--card); border:1px solid #1f2937; border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+    .muted { color: var(--muted); font-size: 12px; }
+    label { display: block; font-size: 12px; color:#9ca3af; margin-bottom:6px; }
+    input, select, textarea, button { width: 100%; padding: 10px 12px; border-radius: 12px; border:1px solid #374151; background: #0f172a; color: var(--text); }
+    input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); border-color: transparent; }
+    .row { display:flex; gap:12px; }
+    .row > * { flex: 1; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align:left; padding: 8px; border-bottom: 1px dashed #1f2937; }
+    th { color:#9ca3af; font-weight:600; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid #374151; background:#0f172a; font-size:12px; }
+    .btn { background: var(--accent); color:#00141f; border:none; cursor:pointer; font-weight:700; }
+    .btn.alt { background:#0f172a; color:var(--text); border:1px solid #374151; }
+    .btn.danger { background: var(--bad); color:#1b0303; }
+    .btn.ok { background: var(--ok); color:#00150a; }
+    .btn.warn { background: var(--warn); color:#1b1201; }
+    .right { text-align:right; }
+    .small { font-size:12px; }
+    .badge { font-size: 11px; padding:4px 8px; border-radius: 999px; border:1px solid #374151; color:#9ca3af }
+    .flex { display:flex; gap:8px; align-items:center; }
+    .spacer { height: 8px; }
+    .hide { display:none; }
+    .link { color: var(--accent); text-decoration: underline; cursor: pointer; }
+    .note { font-size: 12px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap flex" style="justify-content: space-between;">
+      <div class="flex" style="gap:10px;">
+        <img src="icons/icon-192.png" width="28" height="28" alt="logo" style="border-radius:8px;border:1px solid #1f2937" />
+        <div>
+          <h1>Organic Grocery Orders</h1>
+          <div class="muted">Community-first. No delivery fee. Tue & Fri deliveries.</div>
+        </div>
+      </div>
+      <div class="flex">
+        <span id="installPWA" class="pill link">➕ Install App</span>
+        <span class="pill">💾 Offline Ready</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <!-- Order Form -->
+      <section class="card">
+        <h2>Create Order</h2>
+        <div class="row">
+          <div>
+            <label>Customer Name</label>
+            <input id="custName" placeholder="e.g., Lakshmi Narayan" />
+          </div>
+          <div>
+            <label>Phone (WhatsApp)</label>
+            <input id="custPhone" placeholder="10-digit mobile" />
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <label>Address</label>
+        <textarea id="custAddress" rows="2" placeholder="Flat / Street / Area"></textarea>
+        <div class="spacer"></div>
+
+        <div class="row">
+          <div>
+            <label>Delivery Slot</label>
+            <select id="deliverySlot"></select>
+          </div>
+          <div>
+            <label>Notes (optional)</label>
+            <input id="orderNotes" placeholder="e.g., unripe bananas, less oil" />
+          </div>
+        </div>
+
+        <div class="spacer"></div>
+        <div class="row">
+          <div>
+            <label>Search Items</label>
+            <input id="search" placeholder="Type to filter (e.g., tomato)" />
+          </div>
+          <div class="flex" style="justify-content:flex-end;align-items:flex-end;">
+            <span class="badge">CSV: <span id="productCount">0</span> items</span>
+          </div>
+        </div>
+
+        <div class="spacer"></div>
+        <div class="card" style="background:#0c1428;border-color:#1f2a44;">
+          <div class="row small">
+            <div style="flex:2;"><strong>Item</strong></div>
+            <div style="flex:1;"><strong>Unit</strong></div>
+            <div style="flex:1;"><strong>Price</strong></div>
+            <div style="flex:1;"><strong>Qty</strong></div>
+            <div style="flex:1;" class="right"><strong>Amount</strong></div>
+          </div>
+          <div id="items"></div>
+          <div class="row" style="margin-top:8px;">
+            <div class="flex" style="gap:6px;">
+              <span class="badge">Subtotal: ₹<span id="subtotal">0.00</span></span>
+              <span class="badge">Delivery: ₹<span id="deliveryFee">0.00</span></span>
+              <span class="badge">Discount: ₹<input id="discount" type="number" min="0" step="0.5" value="0" style="width:90px;" /></span>
+              <span class="badge">Grand Total: ₹<span id="grandTotal">0.00</span></span>
+            </div>
+            <div class="right">
+              <button id="saveOrder" class="btn ok">Save Order</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Admin / Orders -->
+      <section class="card">
+        <div class="row" style="align-items:center;">
+          <h2 style="margin:0;">Admin & Orders</h2>
+          <div class="right">
+            <span id="adminStatus" class="badge">Admin: Off</span>
+          </div>
+        </div>
+
+        <div id="adminLogin" class="row">
+          <input id="adminPass" placeholder="Admin passcode" type="password" />
+          <button id="adminBtn" class="btn">Unlock Admin</button>
+        </div>
+
+        <div id="adminPanel" class="hide">
+          <div class="spacer"></div>
+          <div class="row">
+            <div>
+              <label>Upload Products CSV</label>
+              <input type="file" id="csvFile" accept=".csv" />
+              <div class="note">Columns required: name,unit,price. Example in products-sample.csv</div>
+            </div>
+            <div>
+              <label>Delivery Fee (₹)</label>
+              <input id="deliveryFeeInput" type="number" min="0" step="1" value="0" />
+            </div>
+          </div>
+          <div class="spacer"></div>
+          <div class="row">
+            <button id="exportOrders" class="btn alt">Export Orders CSV</button>
+            <button id="clearOrders" class="btn danger">Clear All Orders</button>
+          </div>
+          <div class="spacer"></div>
+        </div>
+
+        <div class="spacer"></div>
+        <div class="row small">
+          <div style="flex:2;"><strong>Order</strong></div>
+          <div style="flex:1;"><strong>Slot</strong></div>
+          <div style="flex:1;"><strong>Total</strong></div>
+          <div style="flex:2;"><strong>Status</strong></div>
+        </div>
+        <div id="orders"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    // PWA install prompt handling
+    let deferredPrompt;
+    const btn = document.getElementById('installPWA');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      btn.style.display = 'inline-flex';
+    });
+    btn.addEventListener('click', async () => {
+      if(!deferredPrompt) return;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+    });
+    if('serviceWorker' in navigator){
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js');
+      });
+    }
+  </script>
+</body>
+</html>
